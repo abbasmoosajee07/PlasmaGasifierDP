@@ -24,17 +24,16 @@ poly_properties <- function(polymer_data,monomer_data){
     Step3 <- polymer$Cp_Values*(Degrade_temp-polymer$Melting_Points)
     
     # Breaking Monomer Bonds
-    Step4 <- polymer$BondEnergy*1000/polymer$Molecular_Weight
+    Step4 <- -polymer$BondEnergy*1000/(polymer$Molecular_Weight)
     
     # Heating Monomers
     Step5 <- Cp_int(monomer$Max_temp,monomer) - Cp_int(Degrade_temp,monomer)
     
     # Decomposition Energy
     Step6a <- -((monomer$dHf_J_KG)/monomer$MR)*1000
-    # Step6b <- Cp_int(monomer$Max_temp*1000,monomer) - (monomer$Max_temp*(22+2*30)*1000/monomer$MR)
-    # Step6c <- Cp_int(Inlet_temp*1000,monomer) - (Inlet_temp*(22*2+2*30)*1000/monomer$MR)
-    
-    Step6  <- Step6a # + Step6b + Step6c
+    Step6b <- 0#Cp_int(monomer$Max_temp,monomer) - (monomer$Max_temp*(22+2*30)*1000/monomer$MR)
+    Step6c <- 0#Cp_int(Inlet_temp,monomer) - (Inlet_temp*(22*2+2*30)*1000/monomer$MR)
+    Step6  <- Step6a + Step6b + Step6c
     
     # Sensible Heats of Gases
     Step7Cn <- state_func(main_elements$Carbon,Reac_temp,monomer$Max_temp) * monomer$Cn
@@ -48,7 +47,7 @@ poly_properties <- function(polymer_data,monomer_data){
     Total_Jkg <- Step1 + Step2 + Step3 + Step4 + Step5 + Step6 +  Step7
     Total_Jhr <- Total_Jkg
     
-    Step_Energy <- data.frame("S1"=Step1,"S2"=Step2,"S3"=Step3,"S4"=Step4,
+    Step_Energy <- data.frame("Polymer"=poly_name,"S1"=Step1,"S2"=Step2,"S3"=Step3,"S4"=Step4,
                               "S5"=Step5,"S6"=Step6,"S7"=Step7,"Total"=Total_Jkg)
     all_results <- rbind(all_results, Step_Energy)
     
@@ -58,4 +57,3 @@ poly_properties <- function(polymer_data,monomer_data){
 }
 
 poly_results <- poly_properties(polymer_data,monomer_data)
-polymero <- polymer_data[polymer_data$Polymer == "other",]

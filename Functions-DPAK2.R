@@ -1,8 +1,8 @@
 # List of packages to install
 packages_used <- c('ggplot2','corrplot','dplyr','tidyr','tidytext',
-                   'ggalt','ggrepel','scales','forecast',
-                   'stringr','stringdist','scales','tm',
-                   'tidyverse',"GiRaF","ggiraph")
+                   'ggalt','ggrepel','scales','forecast',"deSolve",
+                   'stringr','stringdist','scales','tm',"kableExtra",
+                   'tidyverse',"GiRaF","ggiraph","reticulate","Ryacas")
 
 # Check if each package is already installed before attempting to install it
 for (package in packages_used) {
