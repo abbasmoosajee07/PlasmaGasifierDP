@@ -1,10 +1,10 @@
 # Endothermic Reaction, +dH, absorbs heat
 # Exothermic Reaction,  -dH, releases heat
 
-Inlet_temp <- 373   # Temp Leaving Dryer in K
+Inlet_temp <- Dryer_out_temp   # Temp Leaving Dryer in K
 Degrade_temp <- 600 # Degradation Temp in K
-Reac_temp <- 2750
-Decomp_Energy <- 1e6
+Reac_temp <- Reaction_temp
+Decomp_Energy <- 1E+6
 
 poly_properties <- function(polymer_data,monomer_data){
   all_results <- data.frame()
@@ -36,12 +36,12 @@ poly_properties <- function(polymer_data,monomer_data){
     Step6  <- Step6a + Step6b + Step6c
     
     # Sensible Heats of Gases
-    Step7Cn <- state_func(main_elements$Carbon,Reac_temp,monomer$Max_temp) * monomer$Cn
-    Step7Hn <- state_func(main_elements$Hydrogen,Reac_temp,monomer$Max_temp) * monomer$Hn
-    Step7On <- state_func(main_elements$Oxygen,Reac_temp,monomer$Max_temp) * monomer$On/2
-    Step7Cln<- state_func(main_elements$Chlorine,Reac_temp,monomer$Max_temp) * monomer$Cln/2
+    Step7Cn <- state_func(main_elements$Carbon,  monomer$Max_temp,Reac_temp) * monomer$Cn
+    Step7Hn <- state_func(main_elements$Hydrogen,monomer$Max_temp,Reac_temp) * monomer$Hn
+    Step7On <- state_func(main_elements$Oxygen,  monomer$Max_temp,Reac_temp) * monomer$On/2
+    Step7Cln<- state_func(main_elements$Chlorine,monomer$Max_temp,Reac_temp) * monomer$Cln/2
     Step7mol<- Step7Cn[1] + Step7Hn[1] + Step7On[1] + Step7Cln[1]
-    Step7   <- Step7mol/monomer$MR*Decomp_Energy
+    Step7   <- Step7mol/monomer$MR * Decomp_Energy
     
     # Total Energy per polymer
     Total_Jkg <- Step1 + Step2 + Step3 + Step4 + Step5 + Step6 +  Step7
@@ -54,6 +54,6 @@ poly_properties <- function(polymer_data,monomer_data){
   }
   
   return(all_results)
-}
+ }
 
 poly_results <- poly_properties(polymer_data,monomer_data)

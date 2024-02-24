@@ -1,3 +1,4 @@
+
 main_elements <- {list(
     Oxygen = data.frame(
       Eq_type = c(1, 1, 1),
@@ -103,7 +104,7 @@ main_elements <- {list(
       G = c(0, 158.7163, 224.4143),
       H = c(0, -74.87310, -74.87310)
     ),
-    Nitric_oxide = data.frame(
+    Nitric_Oxide = data.frame(
       Eq_type = c(0, 1, 1),
       Min_temp =  c(0, 298, 1200),
       Max_temp = c(0, 1200, 6000),
@@ -155,7 +156,7 @@ main_elements <- {list(
       G = c(259.0290, 269.8400, 264.7860),
       H = c(0.000000, 0.000000, 0.000000)
     ),
-    Hydrogen_chloride = data.frame(
+    Hydrogen_Chloride = data.frame(
       Eq_type = c(0, 1, 1),
       Min_temp =  c(0, 298, 1200),
       Max_temp = c(0, 1200, 6000),
@@ -168,7 +169,7 @@ main_elements <- {list(
       G = c(0, 228.6866, 218.2768),
       H = c(0, -92.31201, -92.31201)
     ), 
-    Sulfur_dioxide = data.frame(
+    Sulfur_Dioxide = data.frame(
       Eq_type = c(0, 1, 1),
       Min_temp =  c(0, 298, 1200),
       Max_temp = c(0, 1200, 6000),
@@ -186,76 +187,54 @@ main_elements <- {list(
 
 element_props <- data.frame(
   Component = c("Other_MSW", "Fixed_C", "Ash", "Water", "Carbon", "Hydrogen", "Nitrogen", "Sulfur", "Oxygen", "Chlorine", 
-                  "Carbon_Monoxide", "Hydrogen_Chloride", "Carbon_dioxide", "Methane", "Nitric_Oxide", "Nitrogen_Dioxide", "Sulfur_Dioxide"),
-  Molar_Mass = c(100, 12, 15, 18, 12, 2, 28, 32, 32, 35.5, 32, 36.5, 44, 16, 30, 46, 64),
+                "Carbon_Monoxide", "Hydrogen_Chloride", "Carbon_Dioxide", "Methane", "Nitric_Oxide", "Nitrogen_Dioxide", "Sulfur_Dioxide"),
+  Symbol = c("(MSW)", "(FC)","(Ash)", "(H2O)", "(C)",  "(H2)", "(N2)",  "(S)", "(O2)", 
+             "(Cl2)", "(CO)", "(HCl)", "(CO2)", "(CH4)", "(NO)", "(NO2)","(SO2)" ),
+  Molar_Mass = c(100, 12, 15, 18, 12, 2, 28, 32, 32, 70.9, 28, 36.5, 44, 16, 30, 46, 64),
   Tb_K = c(4100, 4100, 4100, 373.17,  4100, 20.25, 77.34, 0, 90.2, 239.5, 81.63, 188, 258, 111, 121.4, 295.08, 263),
-  Tc_K = c(7020.5, 7020.50, 7020.50, 647, 7020.5, 33.18, 126.19, 1313, 154.58, 416.95, 134.45, 324.68, 73.77, 190.6, 180, 431.4, 430.34),
-  Pc_bar = c(7967.19, 7967.19, 7967.19, 220.64, 7967.19, 13.00, 33.97, 182.08, 50.43, 79.91, 34.98, 82.56, 304.12, 46.1, 64.8, 10.13, 78.84),
-  dHv_Jmol = c(7967.19, 7967.19, 7967.19, 220.64, 7967.19, 13.00, 33.97, 182.08, 50.43, 79.91, 34.98, 82.56, 304.12, 46.1, 64.8, 10.13, 78.84)
-  
+  Tc_K = c(7020.5, 7020.50, 7020.50, 647, 7020.5, 33.18, 126.19, 1313, 154.58, 416.95, 134.45, 324.68, 304.12, 190.6, 180, 431.4, 430.34),
+  Pc_bar = c(7967.19, 7967.19, 7967.19, 220.64, 7967.19, 13.00, 33.97, 182.08, 50.43, 79.91, 34.98, 82.56, 73.77, 46.1, 64.8, 10.13, 78.84),
+  rho_kgm3 = c(1550.00, 1550.00, 1550.00, 6.12, 2267.00, 0.67, 9.24, 2.16, 10.59, 2.99, 13.37, 1.63,  14.64, 6.15, 1.24, 3.40, 30.70),
+  visc_Pas = c(0.00E+00, 0.00E+00, 0.00E+00, 2.65E-05, 0.00E+00, 3.36E-05,  3.98E-05, 0.00E+00, 2.61E-05, 2.50E-05, 1.65E-05, 0.00E+00,  3.25E-05, 2.01E-05, 3.70E-05, 0.00E+00, 2.30E-05),
+  Reac_phase = c("Solid", "Solid", "Solid", "Gas", "Solid", "Gas", "Gas", "Solid", "Gas", 
+                 "Gas", "Gas", "Gas", "Gas", "Gas", "Gas", "Gas", "Gas")
 )
 
 
-Input_elements <- {list(
-    Other_MSW = main_elements$Carbon,
-    Fixed_C = main_elements$Carbon,
-    Ash = main_elements$Carbon,
-    Water = main_elements$Water,
-    Carbon = main_elements$Carbon,
-    Hydrogen = main_elements$Hydrogen,
-    Nitrogen = main_elements$Nitrogen,
-    Sulfur = main_elements$Sulfur,
-    Oxygen = main_elements$Oxygen,
-    Chlorine = main_elements$Chlorine
-  )
-}
-
-Output_elements <- {list(
-  Nitrogen = main_elements$Nitrogen,
-  Oxygen = main_elements$Oxygen,
-  Carbon_Monoxide = main_elements$Carbon_Monoxide,
+all_elements <- {list(
+  Other_MSW = main_elements$Carbon,
+  Fixed_C = main_elements$Carbon,
+  Ash = main_elements$Carbon,
+  Water = main_elements$Water,
+  Carbon = main_elements$Carbon,
   Hydrogen = main_elements$Hydrogen,
-  Hydrogen_Chloride = main_elements$Hydrogen_chloride,
-  Carbon_dioxide = main_elements$Carbon_Dioxide,
+  Nitrogen = main_elements$Nitrogen,
+  Sulfur = main_elements$Sulfur,
+  Oxygen = main_elements$Oxygen,
+  Chlorine = main_elements$Chlorine,
+  Carbon_Monoxide = main_elements$Carbon_Monoxide,
+  Hydrogen_Chloride = main_elements$Hydrogen_Chloride,
+  Carbon_Dioxide = main_elements$Carbon_Dioxide,
   Methane = main_elements$Methane,
-  Nitric_Oxide = main_elements$Nitric_oxide,
+  Nitric_Oxide = main_elements$Nitric_Oxide,
   Nitrogen_Dioxide = main_elements$Nitrogen_Dioxide,
-  Sulfur_Dioxide = main_elements$Sulfur_dioxide
+  Sulfur_Dioxide = main_elements$Sulfur_Dioxide
   )
 }
 
 
-# Polymer Properties ------------------------------------------------------
-
-polymer_data <- data.frame(
-  Polymer = c("LDPE", "HDPE", "PP", "PS", "PVC", "PET", "other"),
-  Molecular_Weight = c(5.00E+04, 2.00E+05, 25000, 2.75E+05, 55000, 4.50E+04, 1.083E+05),
-  Density = c(0.96, 0.96, 0.90, 1.05, 1.40, 1.34, 1.35),
-  Cp_Values = c(2600, 2200, 2000, 1300, 970, 1000, 1678),
-  Melting_Points = c(383, 407, 436, 543, 428, 540, 456),
-  Latent_Heat_Melting = c(1.15E+05, 1.45E+05, 1.84E+05, 9.62E+04, 7.59E+04, 4.06E+04, 1.09E+05),
-  BondEnergy = c(267000, 267000, 267000, 267000, 267000, 267000, 267000)
+Gen_fluid <- data.frame(
+  Fluid = c("Air","Water"),
+  rho_kgm3 = c(1.225, 997.5),
+  visc_Pas = c(18.37E-06, 0.8891E-03),
+  dHvp = c(0, 2660E+3),
+  Cp = c(0.7, 4180)
 )
 
-monomer_data <- data.frame(
-  Compound = c("Ethylene", "Ethylene", "Propylene", "Styrene", "Vinyl Chloride", "Terephthalic acid", "Ethane"),
-  OGPolymer = c("LDPE", "HDPE", "PP", "PS", "PVC", "PET", "other"),
-  Formula = c("C2H4", "C2H4", "C3H6", "C8H8", "C2H3Cl", "C8H6O4", "C2H6"),
-  Cn = c(2, 2, 3, 8, 2, 8, 2),
-  Hn = c(4, 4, 6, 8, 3, 6, 6),
-  Cln = c(0, 0, 0, 0, 1, 0, 0),
-  On  = c(0, 0, 0, 0, 0, 4, 0),
-  MR = c(28, 28, 42, 104, 62.5, 166.132, 30),
-  dHf_J_KG = c(1016, 1016, 469, 998, 455, 4913, 5695)*1000,
-  dS_J_MOL = c(8, 28.45, 19.7, 103.8, 28.45, 816.17, -84.724),
-  Min_temp = c(150, 150, 150, 150, 150, 150, 150),
-  Max_temp = c(1500, 1500, 1500, 1500, 1500, 1500, 1500),
-  A = c(47.32, 47.32, 43.22, 41.72, 31.42, 115.95, 45.66),
-  B = c(-0.23, -0.23, -0.12, 0.34, -0.03, -0.77, -0.17),
-  C = c(1.24E-03, 1.24E-03, 1.09E-03, -4.34E-04, 6.87E-04, 4.60E-03, 1.11E-03),
-  D = c(-2.22E-06, -2.22E-06, -2.02E-06, 1.37E-06, -1.44E-06, -8.41E-06, -1.93E-06),
-  E = c(2.01E-09, 2.01E-09, 1.83E-09, -1.91E-09, 1.40E-09, 7.57E-09, 1.70E-09),
-  F = c(-9.14E-13, -9.14E-13, -8.25E-13, 1.11E-12, -6.59E-13, -3.40E-12, -7.57E-13),
-  G = c(1.65E-16, 1.65E-16, 1.48E-16, -2.30E-16, 1.22E-16, 6.09E-16, 1.35E-16),
-  H = c(0.00E+00, 0.00E+00, 0.00E+00, 0.00E+00, 0.00E+00, 0.00E+00, 0.00E+00)
+Solid_waste <- data.frame(
+  Solid = c("Slag","Ash"),
+  rho_kgm3 = c(2522, 1700),
+  Size = c(0.1, 1E-04),
+  Cp = c(1450, 1450),
+  dHf = c(100, 100)
 )

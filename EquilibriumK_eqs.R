@@ -1,13 +1,15 @@
+x <- sym("x")
+P <- sym("P")
 
-equilibrium_const <- function(selected_reaction) {
+equilibrium_const_eq <- function(selected_reaction) {
   
   # Extracting columns excluding unnecessary ones
   reactant_products <- selected_reaction[, !names(selected_reaction) %in%  
                                            c("RNo", "No", "Equation", "xOG", "DeltaH", "K_eq")]
   
   # Calculating total moles of reactants and products
-  total_reactant_moles <- sum(t(reactant_products)[t(reactant_products) > 0])
-  total_product_moles <- -sum(reactant_products)
+  total_reactant_moles <- -sum(t(reactant_products)[t(reactant_products) < 0])
+  total_product_moles <- sum(reactant_products)
   
   # print(c(n,total_product_moles))
   
@@ -15,13 +17,18 @@ equilibrium_const <- function(selected_reaction) {
   
   # Function to calculate partial pressure expression for a component
   partial_pressure <- function(component_moles) {
-    equilibrium_moles <- paste("(", component_moles, "-", component_moles, "*x", ")")
+    if (component_moles > 0) {
+      initial_moles = component_moles
+    } else {
+      initial_moles = 0
+    }
+    equilibrium_moles <- paste("(", initial_moles, "-", component_moles, "*x", ")")
     pi_eq <- paste("(", equilibrium_moles, "/", total_moles_expression, ")")
     pi_eq_power <- paste("(", pi_eq, "*P)^", -component_moles)
     return(pi_eq_power)
   }
   
-  # Initializing a string for the cumulative product of partial pressures
+  # Initialising a string for the cumulative product of partial pressures
   cumulative_product <- paste("(1)")
   
   # Looping through each column of reactants and products
@@ -32,53 +39,96 @@ equilibrium_const <- function(selected_reaction) {
     if (all(component_moles == 0)) {
       partial_pressure_expression = "(1)"
     } else {
-      partial_pressure_expression <- paste("(", partial_pressure(component_moles), ")")
+      partial_pressure_expression <- paste("(", partial_pressure(-component_moles), ")")
     }
     
     # Updating the cumulative product
     cumulative_product <- paste(cumulative_product, "*", partial_pressure_expression)
   }
-  cumulative_product <- as_r(yac_str(paste("Simplify",cumulative_product)))
+  cumulative_product <- yac_str(paste("Simplify",cumulative_product))
   return(cumulative_product)
 }
-reaction_data$K_eq <-c(0,0,0,0,0,0,0,0,0,0,0,0,0,0)
-
-for (n in 1:nrow(reaction_data)){
-  reaction_data[n,20] <- equilibrium_const(reaction_data[n,])
-}
-
-P=1
-test_eq <- reaction_data[1,20]
-test <- as.function(alist(x =, eval(parse(text = test_eq))))
-curve(test, 0, 1, ylab = "y(x)")
 
 
-# Define the expression as a function
-# redefine D function
-D <- function(eq, order = 1) {
-  yac_str(paste("D(x,", order, ")", eq))
-}
 
-Dtest_eq <- D(test_eq)
-print(Dtest_eq)
-
-# Newton-Raphson method function -------------------------------------------
-newton_raphson <- function(f, df, x0, tol = 1e-6, max_iter = 1e+6) {
-  Zi <- x0
-  iter <- 0
+thermo_conv <- function(equation_text,k_eq,Pn){
   
-  while (abs(f(Zi)) > tol && iter < max_iter) {
-    Zi <- Zi - f(Zi) / df(Zi)
-    iter <- iter + 1
+  function_maker <- function(equation_text){
+    expression_function <- function(x, P) { 
+      out <- eval(parse(text = equation_text)) 
+      return (out)
+    }
+    return(expression_function)
   }
   
-  if (iter == max_iter) {
-    Zi = Z_n
-    warning("Maximum number of iterations reached.")
-  }
-  return(Zi)
+  text_eq <- paste("(",equation_text,"-",k_eq,")")
+  expression_function <- function_maker(text_eq)
+  conv_T <- uniroot(function(x) expression_function(x, Pn) ,interval = c(0.00, 1))$root
+  return(conv_T)
 }
 
-Z_n <- newton_raphson(function(Z) EOS_RK(Z, P_n, T_n),
-                      function(Z) EOS_RK_derivative(Z, P_n, T_n),
-                      1)
+Tgas = 2750
+R = 8.314
+k_eq = 5.96E+02*exp((-1800)/(Tgas))
+k_eq = 55.67598
+
+eq_const_func <- function(reaction_props,reaction_data,elem_props) {
+  
+  reac_no <- reaction_props$RNo
+  reac_elem <- reaction_data[reac_no,]
+  reac_comp <- reac_elem[, !names(reac_elem) %in%  
+                           c("RNo", "No", "Equation", "xOG", "DeltaH", "K_eq")]
+  
+  reac_thermo <- data.frame()
+  for (element in names(reac_comp)){
+    element_mols <- reac_comp[element]
+    
+    elem_prop <- elem_props[elem_props$Element == element,]
+    Elem_Enthalpy <- elem_prop["Enthalpy"] * element_mols
+    Elem_Entropy  <- elem_prop["Entropy"] * element_mols
+    
+    reac_energy <- data.frame("dH" = Elem_Enthalpy,"dS" = Elem_Entropy, "Elem" = element)
+    reac_thermo <- rbind(reac_thermo, reac_energy)
+  }
+  
+  dHT = sum(reac_thermo$Enthalpy) + reac_elem$DeltaH*1000
+  dST = sum(reac_thermo$Entropy)
+  dG  = dHT - dST * Reaction_temp
+  
+  lnK = dG / (-R * Reaction_temp)
+  K = exp(lnK)
+  result <- data.frame("Gibbs"=dG, "K"=K)
+  return(result)
+}
+
+
+all_elem <- thermo_properties(main_elements,298,Reaction_temp)
+
+Pres <- 1
+for (n in 1:nrow(reaction_data)) {
+  Rthermo_prop <- eq_const_func(reaction_props[n,],reaction_data,all_elem)
+  reaction_props[n,"No"] <- as.character(reaction_data[n,"No"])
+  reaction_props[n,"dG"] <- Rthermo_prop["Gibbs"]
+  reaction_props[n,"K_val"] <- Rthermo_prop["K"]
+  k_eq <- reaction_props[n,8]
+  equilibrium_equation <- equilibrium_const_eq(reaction_data[n,])
+  conv_T2 <- thermo_conv(equilibrium_equation,k_eq,Pres)
+  reaction_props[n,"K_eq"] <- equilibrium_equation
+  reaction_props[n,"x_thermo"] <- conv_T2
+}
+
+Reacx_plot <- ggplot() +
+  geom_point(reaction_props, mapping = aes(x = RNo, y = x_thermo, color = No), size = 5, shape = 16) +
+  geom_text(data = reaction_props[reaction_props$x_thermo >  0.5,], mapping = aes(x = RNo-0.2, y=x_thermo, label = paste("dH =",DeltaH)), color = "black", angle = 90, hjust = +1.2, na.rm = TRUE) +
+  geom_text(data = reaction_props[reaction_props$x_thermo <= 0.5,], mapping = aes(x = RNo-0.2, y=x_thermo, label = paste("dH =",DeltaH)), color = "black", angle = 90, hjust = -.2, na.rm = TRUE) +
+  
+  geom_vline(xintercept = 0, linetype = "solid", color = "black") +
+  geom_hline(yintercept = 0, linetype = "solid", color = "black") +
+  labs(title = "Thermodynamic Equilibrium Conversion for each Reaction",
+       y = "Equilibrium Conversion (x)",
+       x = "Reaction (K)",
+       color = "Reaction No") +
+  scale_y_continuous(breaks = seq(0, 1, by = 0.25), labels = scales::number_format()) +
+  scale_x_continuous(breaks = seq(1, 14, by = 1), labels = scales::number_format()) +
+  PGDP_theme()
+print(Reacx_plot)
