@@ -1,3 +1,26 @@
+# =============================================================================
+# Functions-DPAK2.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: All the main functions being used within the calculations of the 
+# whole node
+#
+# =============================================================================
+
+
+# Process Constants -----------------------------------------------------------
+P_atm <- 101325
+Ref_T <- 298
+gravity <- 9.81
+R <- 8.314
+
+# Unit Conversions ------------------------------------------------------------
+JhrtokWh <- 1 / (3600 * 1000)
+timeconv <- 3600
+
+# Visual Functions -----------------------------------------------------------
 
 PGDP_theme <- function(){
   theme_minimal() +
@@ -8,7 +31,7 @@ PGDP_theme <- function(){
       axis.text.x = element_text(angle = 45, hjust = 1),
       legend.title = element_text(size = 12,face = "bold"),
       legend.text = element_text(size = 10),
-      plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+      plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
       panel.background = element_blank(),
       panel.grid.major = element_line(color = "gray", linetype = "dashed"),
       panel.grid.minor = element_blank(),
@@ -17,7 +40,6 @@ PGDP_theme <- function(){
 }
 
 view_table <- function(table, round = 2, type = "html") {
-  # Round all numeric values in the dataframe to the specified number of decimal places
   rounded_table <- table 
   for (nr in 1:nrow(table)){
     for (nc in 1:ncol(table)){
@@ -27,11 +49,9 @@ view_table <- function(table, round = 2, type = "html") {
       }
     }
   }
-  
   formatted_table <- rounded_table %>%
     kable(format = type) %>%
     kable_styling(full_width = FALSE)
-  
   print(formatted_table)
 }
 
@@ -88,6 +108,12 @@ Composition_props <- function(Composition,Pa_e,Tfa_e,Ti_e = 0){
   }
   rownames(Composition) <- Composition[,"Component"]
   return(Composition)
+}
+
+calc_ReacHeight <- function(diameter, volume) {
+  radius <- diameter / 2
+  height <- volume / (pi * radius^2)
+  return(height)
 }
 # Newton-Raphson method function -------------------------------------------
 
@@ -158,6 +184,7 @@ diff_func_maker <- function(equation_text,
                             V) {
   eval(parse(text = equation_text))
 }
+
 rate_eq <- function(time, variables, parameters) {
   with(as.list(c(variables, parameters)), {
     equations <- Overall_MB[, "Rate_eq"]

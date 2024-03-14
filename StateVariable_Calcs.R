@@ -131,6 +131,7 @@ state_func <- function(TP_data,Start_Temp,Final_Temp){
   return(result)
   
 }
+
 # Calculate properties for each element
 thermo_properties <- function(elements,Start_Temp,Final_Temp){
   all_results <- data.frame()
@@ -149,6 +150,4 @@ thermo_properties <- function(elements,Start_Temp,Final_Temp){
   return(all_results)
 }
 
-
-test <- state_func(main_elements$Water,0,298)
 

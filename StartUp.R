@@ -7,7 +7,8 @@ packages_used <- c('ggplot2','corrplot','dplyr','tidyr','tidytext',
                    'ggalt','ggrepel','scales','forecast',"deSolve",
                    'stringr','stringdist','scales','tm',"kableExtra",
                    'tidyverse',"GiRaF","ggiraph","reticulate","pracma",
-                   "rlang", "Ryacas", "directlabels","tibble","magick")
+                   "rlang", "Ryacas", "directlabels","tibble","magick",
+                   "reshape2")
 # Check if each package is already installed before attempting to install it
 for (package in packages_used) {
   if (!(package %in% installed.packages()[,"Package"])) {
@@ -59,7 +60,7 @@ pic_folder <- "~/Univeristy Coursework/Local Design Project/PlasmaGasifier-DP/Re
 script_files <- c("Functions-DPAK2.R", "PlasmaGasifier.R",
                   "Element_data.R", "PolymerData.R",
                   "StateVariable_Calcs.R","Unit_Funcs.R",
-                  "InitialInfo.R", "PolymerEB.R",
+                  "InitialInfo.R", "EB_Polymer.R",
                   "Reactions.R", "EquilibriumK_eqs.R",
                   "conv_calc.R", "PostPG_Calc.R")
 

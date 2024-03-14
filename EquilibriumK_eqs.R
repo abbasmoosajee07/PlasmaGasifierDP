@@ -67,11 +67,6 @@ thermo_conv <- function(equation_text,k_eq,Pn){
   return(conv_T)
 }
 
-Tgas = 2750
-R = 8.314
-k_eq = 5.96E+02*exp((-1800)/(Tgas))
-k_eq = 55.67598
-
 eq_const_func <- function(reaction_props,reaction_data,elem_props) {
   
   reac_no <- reaction_props$RNo
@@ -93,16 +88,16 @@ eq_const_func <- function(reaction_props,reaction_data,elem_props) {
   
   dHT = sum(reac_thermo$Enthalpy) + reac_elem$DeltaH*1000
   dST = sum(reac_thermo$Entropy)
-  dG  = dHT - dST * Reaction_temp
+  dG  = dHT - dST * Reac_temp
   
-  lnK = dG / (-R * Reaction_temp)
+  lnK = dG / (-R * Reac_temp)
   K = exp(lnK)
   result <- data.frame("Gibbs"=dG, "K"=K)
   return(result)
 }
 
 
-all_elem <- thermo_properties(main_elements,298,Reaction_temp)
+all_elem <- thermo_properties(main_elements,298,Reac_temp)
 
 Pres <- 1
 for (n in 1:nrow(reaction_data)) {
@@ -126,9 +121,13 @@ Reacx_plot <- ggplot() +
   geom_hline(yintercept = 0, linetype = "solid", color = "black") +
   labs(title = "Thermodynamic Equilibrium Conversion for each Reaction",
        y = "Equilibrium Conversion (x)",
-       x = "Reaction (K)",
+       x = "Reaction No",
        color = "Reaction No") +
   scale_y_continuous(breaks = seq(0, 1, by = 0.25), labels = scales::number_format()) +
   scale_x_continuous(breaks = seq(1, 14, by = 1), labels = scales::number_format()) +
-  PGDP_theme()
+  PGDP_theme() +
+  theme(legend.position = "None") +
+  coord_cartesian(clip = "off") 
+
 print(Reacx_plot)
+ggsave(file.path(pic_folder, "GibbsXPlot.png"), Reacx_plot, width = 170, height = 80, units = "mm")

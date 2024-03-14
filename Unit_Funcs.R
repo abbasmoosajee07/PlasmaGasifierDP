@@ -1,3 +1,13 @@
+# =============================================================================
+# Unit_Funcs.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: Create functions for all auxiliary units required in the 
+# post-gasifier processing
+#
+# =============================================================================
 
 # Heat Exchanger Stream Calculations -------------------------------------------
 HEX_Stream <- function(St_prop,Flow_Composition, HEX_eff = 0.9) {
@@ -6,10 +16,16 @@ HEX_Stream <- function(St_prop,Flow_Composition, HEX_eff = 0.9) {
   CTi <- St_prop[St_prop$Stream=="Cold","TempIn_K"]
   CTf <- St_prop[St_prop$Stream=="Cold","TempOut_K"]
   
-  Pne <- 15E+6
-  # elem_thermo1 <- thermo_properties(all_elements,HTi,HTf)
+  Pne <- PG_Press
   Flow_Composition <- Composition_props(Flow_Composition,Pne,HTf,HTi)
-  result_water   <- state_func(main_elements$Water,CTi,CTf)
+  
+  if (CTf >= element_props[element_props$Component == "Water","Tb_K"]){
+    dHv <- Gen_fluid[Gen_fluid$Fluid == "Water","dH_Jmol"]
+    result_water   <- state_func(main_elements$Water,CTi,CTf) + dHv
+    
+  } else {
+    result_water   <- state_func(main_elements$Water,CTi,CTf)
+  }
   Hot_dH <- -sum(Flow_Composition[,"dH_Jhr"])
   Cold_dH <- Hot_dH / HEX_eff
   water_molflow <- Cold_dH / result_water$Enthalpy
@@ -22,6 +38,7 @@ HEX_Stream <- function(St_prop,Flow_Composition, HEX_eff = 0.9) {
   
   return(St_prop)
 }
+
 
 # Shell & Tube Heat Excanger Function ------------------------------------------
 STHEX_func <- function(St_prop, Tube_No = 338, Tube_OD = 50E-3, thk =5E-3, Shell_ID = 3){ 
@@ -97,6 +114,7 @@ STHEX_func <- function(St_prop, Tube_No = 338, Tube_OD = 50E-3, thk =5E-3, Shell
   return(result)
 }
 
+
 # Pump Functions ---------------------------------------------------------------
 Pump_func <- function(PFluid_props) { 
   # Water Storage Properties
@@ -109,7 +127,8 @@ Pump_func <- function(PFluid_props) {
   hm <- 2.5              # Minor Head Losses from fittings, expansion
   
   # Fluid Properties------------------------------------------------------------
-  dHvp <- Gen_fluid[Gen_fluid$Fluid == "Water","dHvp"]
+  dHvp <- Gen_fluid[Gen_fluid$Fluid == "Water","dH_Jmol"] /
+               Gen_fluid[Gen_fluid$Fluid == "Water","RMM"]
   CpW <- Gen_fluid[Gen_fluid$Fluid == "Water","Cp"]
   rho_f <- Gen_fluid[Gen_fluid$Fluid == "Water","rho_kgm3"]
   InT_K <- 288           # Ref Temp for Vap Pressure
@@ -129,8 +148,8 @@ Pump_func <- function(PFluid_props) {
   dP_Pa <- DischargeP_Pa - SuctionP_Pa
   
   # Pump Power Calculations
-  pump_power_req<- (Water_flow*dP_Pa)/3.6E+06  # in kilowatts
-  pump_power_out<- pump_power_req/pump_eff * 3600
+  pump_power_req<- (Water_flow*dP_Pa)/3.6E+06  # in kWh
+  pump_power_out<- pump_power_req/pump_eff
 
   # NPSH available Calculations
   dT <- pump_power_req*(1-pump_eff)/(CpW*Water_flow*rho_f)       # Increase in Temp
@@ -178,6 +197,7 @@ Pump_func <- function(PFluid_props) {
   return(Pump_props)
 }
 
+
 # Quench Tower Calculations for ------------------------------------------------
 CoolingT_Stream <- function(St_prop,Solid, HEX_eff = 0.9) {
   HTi <- St_prop[St_prop$Stream=="Hot","TempIn_K"]
@@ -205,3 +225,61 @@ CoolingT_Stream <- function(St_prop,Solid, HEX_eff = 0.9) {
   return(St_prop)
 }
 
+
+
+
+
+# Compressor Functions ----------------------------------------------------
+fan_func <- function(Composition, Pi_Pa, dP_Pa, Ti, efficiency = 0.8) {
+  Pf_Pa <- Pi_Pa + dP_Pa
+  Pi_Comp <- Composition_props(Output_composition,Pi_Pa,Ti)
+  Pf_Comp <- Composition_props(Output_composition,Pf_Pa,Ti)
+  
+  Vi_m3hr <- sum(Pi_Comp$Vol_m3hr)
+  Vf_m3hr <- sum(Pf_Comp$Vol_m3hr)
+  
+  Cp <- (sum(Pi_Comp$dH_Jhr)/1000)/sum(Pi_Comp$Mol_kmolhr)
+  Cv <- Cp - R
+  gamma <- Cp / Cv
+
+    # Calculate work done using the formula: W = (P2 * V2 - P1 * V1) / (gamma - 1)
+  work_done <- (Pf_Pa * Vf_m3hr - Pi_Pa * Vi_m3hr) / (gamma - 1)
+  
+  # Calculate change in enthalpy
+  delta_h <- work_done
+  
+  # Calculate change in temperature using ideal gas law: P1 * V1 / T1 = P2 * V2 / T2
+  delta_T <- ((Pf_Pa * Vf_m3hr) / (Pi_Pa * Vi_m3hr)) - 1
+  delta_T <- delta_T * (gamma - 1) * ((1 / Vi_m3hr) - (1 / Vf_m3hr))
+  
+  # Calculate compression ratio
+  compression_ratio <- Pf_Pa / Pi_Pa
+  
+  # Calculate mass flow rate assuming steady flow
+  massflow_kghr <- sum(Pi_Comp$Mass_KGhr)
+  
+  # Calculate power required by the compressor
+  power_required <- work_done / efficiency
+  
+  # Calculate electricity usage
+  electricity_usage <- power_required * JhrtokWh# Convert from J/s to kWh
+  Cost <- (3800 + 49 * Vi_m3hr^0.8)*(798.7/509.7)
+  
+  fan_props <- data.frame(
+    Property = c("Fluid_Flow", "Initial_Volume", "Initial_Pressure",
+                 "Final_Volume", "Final_Pressure",
+                 "Pressure Drop", "Power Required", "Electricity Use" ,"Equipment Cost"),
+    Unit = c("kg/hr", "m^3/hr", "Pa", "m^3/hr", "Pa","Pa", "kWh", "kWh", "£"),
+    Values = c(massflow_kghr, Vi_m3hr, Pi_Pa, Vf_m3hr, Pf_Pa,
+               dP_Pa, power_required, electricity_usage, Cost)
+  )
+  return(fan_props)
+}
+
+# Steam Turbine -----------------------------------------------------------
+
+Steam_turbine <- function(steam_mass){
+  turbine <- 12500 / 54000
+  elec_kWh <- turbine * steam_mass
+  return(elec_kWh)
+}

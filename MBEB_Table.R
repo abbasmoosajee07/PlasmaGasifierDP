@@ -29,7 +29,7 @@ Stream_summary["SnG001","Totalkghr"] <- sum(Stream_summary[,c("Waterkghr","HazGa
 
 Stream_summary["SnG002",] <- Stream_summary["SnG001",]
 Stream_summary["SnG002","PostUnit"] <- "F001"
-Stream_summary["SnG002","PresPa"] <- as.numeric(Stream_summary["SnG001","PresPa"]) + FandP_Pa
+Stream_summary["SnG002","PresPa"] <- as.numeric(Stream_summary["SnG001","PresPa"]) + Fan_001[Fan_001$Property == "Pressure Drop", "Values"]
 Stream_summary["SnG002","Volm3hr"] <- sum(Composition_props(Output_composition,Stream_summary["SnG002","PresPa"],Stream_summary["SnG002","TempK"])$Vol_m3hr)
 
 Stream_summary["SnG003",] <- Stream_summary["SnG002",]
@@ -43,14 +43,14 @@ Stream_summary["SnG003","Volm3hr"] <- sum(PGOut2$Vol_m3hr)
 Stream_summary["CW001",] <- c("Storage", 0, 0, 0, 0, 0, 0, 0, 0, 0)
 Stream_summary["CW001", "TempK"] <- HEX1_Stream[HEX1_Stream$Stream == "Cold", "TempIn_K"]
 Stream_summary["CW001", "Volm3hr"] <- HEX1_Stream[HEX1_Stream$Stream == "Cold", "Vol_m3hr"]
-Stream_summary["CW001", "PresPa"] <- Pump_1[Pump_1$Property == "Suction Pressure", "Values"]
-Stream_summary["CW001", "Waterkghr"] <- Pump_1[Pump_1$Property == "Fluid Flow", "Values"]
+Stream_summary["CW001", "PresPa"] <- Pump_001[Pump_001$Property == "Suction Pressure", "Values"]
+Stream_summary["CW001", "Waterkghr"] <- Pump_001[Pump_001$Property == "Fluid Flow", "Values"]
 Stream_summary["CW001","Totalkghr"] <- (Stream_summary["CW001","Waterkghr"])
 Stream_summary["CW001","HJhr"] <- H_func(as.numeric(Stream_summary["CW001", "TempK"])/1000,main_elements$Water[1,])
 
 Stream_summary["CW002", ] <- Stream_summary["CW001", ]
 Stream_summary["CW002","PostUnit"] <- "P001"
-Stream_summary["CW002", "PresPa"] <- Pump_1[Pump_1$Property == "Discharge Pressure", "Values"]
+Stream_summary["CW002", "PresPa"] <- Pump_001[Pump_001$Property == "Discharge Pressure", "Values"]
 
 Stream_summary["HW001", ] <- Stream_summary["CW002", ]
 Stream_summary["HW001","PostUnit"] <- "HEX001"
@@ -60,7 +60,7 @@ Stream_summary["HW001","HJhr"] <- H_func(as.numeric(Stream_summary["HW001", "Tem
 
 Stream_summary["SnG004",] <- Stream_summary["SnG003",]
 Stream_summary["SnG004","PostUnit"] <- "F002"
-Stream_summary["SnG004","PresPa"] <- as.numeric(Stream_summary["SnG003","PresPa"]) + FandP_Pa
+Stream_summary["SnG004","PresPa"] <- as.numeric(Stream_summary["SnG003","PresPa"]) + Fan_002[Fan_002$Property == "Pressure Drop", "Values"]
 Stream_summary["SnG004","Volm3hr"] <- sum(Composition_props(Output_composition,as.numeric(Stream_summary["SnG004","PresPa"]),as.numeric(Stream_summary["SnG004","TempK"]))$Vol_m3hr)
 
 # HEX 2 & Pump 2 Stream Calculations -------------------------------------------
@@ -68,22 +68,22 @@ Stream_summary["SnG004","Volm3hr"] <- sum(Composition_props(Output_composition,a
 Stream_summary["SnG005",] <- Stream_summary["SnG004",]
 Stream_summary["SnG005","PostUnit"] <- "HEX002"
 Stream_summary["SnG005","TempK"] <- HEX2_Stream[HEX1_Stream$Stream == "Hot", "TempOut_K"]
-Stream_summary["SnG005","PresPa"] <- as.numeric(Stream_summary["SnG002","PresPa"]) - HEX2_Stream[HEX2_Stream$Stream == "Hot", "dP_Pa"]
+Stream_summary["SnG005","PresPa"] <- as.numeric(Stream_summary["SnG004","PresPa"]) - HEX2_Stream[HEX2_Stream$Stream == "Hot", "dP_Pa"]
 PGOut3 <- Composition_props(Output_composition, as.numeric(Stream_summary["SnG002","PresPa"]),as.numeric(Stream_summary["SnG002","TempK"]))
 Stream_summary["SnG005","HJhr"] <- sum(PGOut3$dH_Jhr)
 Stream_summary["SnG005","Volm3hr"] <- sum(PGOut3$Vol_m3hr)
 
 Stream_summary["CW003",] <- c("Storage", 0, 0, 0, 0, 0, 0, 0, 0, 0)
 Stream_summary["CW003", "TempK"] <- HEX1_Stream[HEX2_Stream$Stream == "Cold", "TempIn_K"]
-Stream_summary["CW003", "PresPa"] <- Pump_2[Pump_2$Property == "Suction Pressure", "Values"]
-Stream_summary["CW003", "Waterkghr"] <- Pump_2[Pump_2$Property == "Fluid Flow", "Values"]
+Stream_summary["CW003", "PresPa"] <- Pump_002[Pump_002$Property == "Suction Pressure", "Values"]
+Stream_summary["CW003", "Waterkghr"] <- Pump_002[Pump_002$Property == "Fluid Flow", "Values"]
 Stream_summary["CW003","Totalkghr"] <- (Stream_summary["CW003","Waterkghr"])
 Stream_summary["CW003", "Volm3hr"] <- HEX2_Stream[HEX2_Stream$Stream == "Cold", "Vol_m3hr"]
 Stream_summary["CW003","HJhr"] <- H_func(as.numeric(Stream_summary["CW003", "TempK"])/1000,main_elements$Water[1,])
 
 Stream_summary["CW004", ] <- Stream_summary["CW003", ]
 Stream_summary["CW004","PostUnit"] <- "P002"
-Stream_summary["CW004", "PresPa"] <- Pump_2[Pump_2$Property == "Discharge Pressure", "Values"]
+Stream_summary["CW004", "PresPa"] <- Pump_002[Pump_002$Property == "Discharge Pressure", "Values"]
 
 Stream_summary["HW002", ] <- Stream_summary["CW003", ]
 Stream_summary["HW002","PostUnit"] <- "HEX002"
@@ -93,7 +93,7 @@ Stream_summary["HW002","HJhr"] <- H_func(as.numeric(Stream_summary["HW002", "Tem
 
 Stream_summary["SnG006",] <- Stream_summary["SnG005",]
 Stream_summary["SnG006","PostUnit"] <- "F003"
-Stream_summary["SnG006","PresPa"] <- as.numeric(Stream_summary["SnG005","PresPa"]) + FandP_Pa
+Stream_summary["SnG006","PresPa"] <- as.numeric(Stream_summary["SnG005","PresPa"]) + + Fan_003[Fan_003$Property == "Pressure Drop", "Values"]
 Stream_summary["SnG006","Volm3hr"] <- sum(Composition_props(Output_composition,as.numeric(Stream_summary["SnG006","PresPa"]),as.numeric(Stream_summary["SnG006","TempK"]))$Vol_m3hr)
 
 # Slag CoolingT Tower
@@ -109,15 +109,15 @@ Stream_summary["Sg002","HJhr"] <-  Slag * as.numeric(Stream_summary["Sg002","Tem
 
 Stream_summary["CW005", ] <- c("Storage", 0, 0, 0, 0, 0, 0, 0, 0, 0)
 Stream_summary["CW005", "TempK"] <- CoolingT1[CoolingT1$Stream == "Cold", "TempIn_K"]
-Stream_summary["CW005", "PresPa"] <- Pump_3[Pump_3$Property == "Suction Pressure", "Values"]
-Stream_summary["CW005", "Waterkghr"] <- Pump_3[Pump_3$Property == "Fluid Flow", "Values"]
+Stream_summary["CW005", "PresPa"] <- Pump_003[Pump_003$Property == "Suction Pressure", "Values"]
+Stream_summary["CW005", "Waterkghr"] <- Pump_003[Pump_003$Property == "Fluid Flow", "Values"]
 Stream_summary["CW005","Totalkghr"] <- (Stream_summary["CW005","Waterkghr"])
 Stream_summary["CW005", "Volm3hr"] <- CoolingT1[CoolingT1$Stream == "Cold", "Vol_m3hr"]
 Stream_summary["CW005","HJhr"] <- H_func(as.numeric(Stream_summary["CW005", "TempK"])/1000,main_elements$Water[1,])
 
 Stream_summary["CW006", ] <- Stream_summary["CW005", ]
 Stream_summary["CW006","PostUnit"] <- "P003"
-Stream_summary["CW006", "PresPa"] <- Pump_3[Pump_3$Property == "Discharge Pressure", "Values"]
+Stream_summary["CW006", "PresPa"] <- Pump_003[Pump_003$Property == "Discharge Pressure", "Values"]
 
 Stream_summary["HW003", ] <- Stream_summary["CW006", ]
 Stream_summary["HW003","PostUnit"] <- "HEX003"
@@ -148,15 +148,15 @@ Stream_summary["A002","HJhr"] <-  Ash * as.numeric(Stream_summary["A002","TempK"
 
 Stream_summary["CW007",] <- c("Storage", 0, 0, 0, 0, 0, 0, 0, 0, 0)
 Stream_summary["CW007", "TempK"] <- CoolingT2[CoolingT2$Stream == "Cold", "TempIn_K"]
-Stream_summary["CW007", "PresPa"] <- Pump_4[Pump_4$Property == "Suction Pressure", "Values"]
-Stream_summary["CW007", "Waterkghr"] <- Pump_4[Pump_4$Property == "Fluid Flow", "Values"]
+Stream_summary["CW007", "PresPa"] <- Pump_004[Pump_004$Property == "Suction Pressure", "Values"]
+Stream_summary["CW007", "Waterkghr"] <- Pump_004[Pump_004$Property == "Fluid Flow", "Values"]
 Stream_summary["CW007","Totalkghr"] <- (Stream_summary["CW007","Waterkghr"])
 Stream_summary["CW007", "Volm3hr"] <- CoolingT2[CoolingT2$Stream == "Cold", "Vol_m3hr"]
 Stream_summary["CW007","HJhr"] <- H_func(as.numeric(Stream_summary["CW007", "TempK"])/1000,main_elements$Water[1,])
 
 Stream_summary["CW008", ] <- Stream_summary["CW007", ]
 Stream_summary["CW008","PostUnit"] <- "P004"
-Stream_summary["CW008", "PresPa"] <- Pump_4[Pump_4$Property == "Discharge Pressure", "Values"]
+Stream_summary["CW008", "PresPa"] <- Pump_004[Pump_004$Property == "Discharge Pressure", "Values"]
 
 Stream_summary["HW004", ] <- Stream_summary["CW008", ]
 Stream_summary["HW004","PostUnit"] <- "HEX004"
