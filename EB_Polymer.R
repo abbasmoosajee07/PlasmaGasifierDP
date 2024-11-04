@@ -1,5 +1,12 @@
-# Endothermic Reaction, +dH, absorbs heat
-# Exothermic Reaction,  -dH, releases heat
+# =============================================================================
+# EB_Polymer.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: Energy Balance required to heat and breakdown the polymers
+#
+# =============================================================================
 
 Inlet_temp <- Dryer_out_temp   # Temp Leaving Dryer in K
 Degrade_temp <- 600 # Degradation Temp in K
@@ -59,8 +66,7 @@ PolyE_Jhr <- sum(poly_results$Total_Jhr)
 
 
 PolyE_kWh <- PolyE_Jhr * JhrtokWh
-PolyE_kW  <- PolyE_kWh / 3600
-Elec_Pnd = PolyE_kWh * Elec_Cost
+PolyE_kW  <- PolyE_kWh 
 
 
 # cat("Total Energy(J/kg)", sum(poly_results$Total_Jkg),"\n")

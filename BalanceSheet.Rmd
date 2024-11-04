@@ -1,0 +1,50 @@
+---
+title: "BalanceSheet"
+author: "AbbasMoosajee"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("StartUp.R")
+source("Finance.R")
+```
+
+## Capital Cost
+Inner Site Battery Limits
+
+```{r echo=FALSE, message=FALSE}
+# ISBL_df
+Stream_summary
+```
+Total Capital Cost
+```{r}
+CapCost_df
+```
+Fixed Cost of Production
+```{r}
+FCOP_df
+```
+Cost of Utilities
+```{r}
+Utilities_df
+```
+Cost of Raw Materials
+```{r}
+RawMat_df
+```
+Product Revenues
+```{r}
+Prods_df
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(CapCost_pie)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

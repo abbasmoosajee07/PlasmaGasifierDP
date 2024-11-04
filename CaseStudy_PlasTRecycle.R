@@ -1,3 +1,13 @@
+# =============================================================================
+# CaseStudy_PlasTRecycle.R.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: Case Study on the effect of varying recycled water on oxygen 
+#   requiremntes
+#
+# =============================================================================
 
 # Conversion Function ----------------------------------------------------------
 convW_func <- function(Input_composition,O2_feed,O2_purity,Vr,Press_Pa,Water){
@@ -79,16 +89,14 @@ convW_func <- function(Input_composition,O2_feed,O2_purity,Vr,Press_Pa,Water){
   return(OutComp_n)
 }
 
-Vr <- 15
 ReacPress_Out <- SynG_PI
 
 # W_plist = seq(0.5,  0.9, by = 0.1)
-W_flist = seq(1000, 2000000, by = 100000)
 W_flist = seq(1, 100000, by = 10000)
 
 Case_W <- data.frame()
-O2_purity <- 0.99
-O2_feed <- 7000    # Minimum O2 req is 6300kg of O2
+O2_purity <- 0.77
+O2_feed <- 9000    # Minimum O2 req is 6300kg of O2
 
 
 for (nW in 1:length(W_flist)){

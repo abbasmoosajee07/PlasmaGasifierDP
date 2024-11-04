@@ -1,3 +1,13 @@
+# =============================================================================
+# EquilibriumK_eqs.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: Calculating Equilibrium conversion based on Gibbs Energy
+#
+# =============================================================================
+
 x <- sym("x")
 P <- sym("P")
 

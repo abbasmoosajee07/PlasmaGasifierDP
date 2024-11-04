@@ -1,3 +1,13 @@
+# =============================================================================
+# rate_constants.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: Using existing models for rate constants based on Arhenius eq
+#  calculate rate constant value for reaction temp
+#
+# =============================================================================
 
 rate_constants <- rate_eqs[,c("RNo","Equation","Rate_eq")]
 rate_constants[,"DeltaH"] <- reaction_data$DeltaH

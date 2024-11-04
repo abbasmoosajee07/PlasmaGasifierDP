@@ -1,3 +1,14 @@
+# =============================================================================
+# CoolingJacket.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: Calculating required properties for the cooling jacket to control
+# gasifier temperature
+#
+# =============================================================================
+
 # Physical Data for Water from NIST Webbook
 RMM <- 18.0315                # Molar Mass of Water
 Pressure <- 101.325           # Pressure in kPa, 1atm
@@ -12,40 +23,44 @@ W_k <- 0.64                   # Conductivity of Water
 W_Cp <- 4.18E+3               # Heat Capacity in J kg^-1
 
 # Apparatus properties
-W_m <- 1.042                   # Mass of water in kg
 Ou_TD <- PGD_m + 0.1             # Outer Tank Diameter
 In_TD <- PGD_m             # Inner Tank Diameter
-Tk_T <-  0.1              # Tank Thickness
 Ou_s <- pi * Ou_TD * PGH_m     # Outer Surface Area of tank
 
-T_h <- 2750                    
-T_s <- 288
-T_base <- T_conv <- T_rad <- 2750
+T_h <- Reac_temp                    
+T_s <- Room_temp
+T_base <- T_conv <- T_rad <- Reac_temp
 
-# Model Calculations
-Imp_speed <- ((Stirr_speed / 100) * Imp_maxrpm) / 60 # Impeller speed in m/s
-Re_imp <- (W_Density * Imp_speed * (Imp_D^2)) / W_DViscosity            # Reynolds Impeller
-W_Pr <- W_Cp * W_DViscosity / W_k           # Water Prandtl Number
-W_Nu <- 0.87 * Re_imp^(0.62) * W_Pr^(0.33)  # Water Nusselt
 
 # Heat Source Properties
 
 # Jacket Properties
-Jk_thk <- 2.5E-03 # Jacket thickness
-Jk_d <- PGD_m    # Diameter of Jacket
-Jk_h <- PGH_m - (1.4 * PGD_m)   # Jacket of height
+JktQ_m3hr <- 1
+JktM_khgr <- JktQ_m3hr * Gen_fluid[Gen_fluid$Fluid == "Water", "rho_kgm3"]
+Jk_thk <- 100E-03                  # Jacket thickness
+Jk_d <- PGD_m + (Wall_thick + 100E-3)*2               # Diameter of Jacket
+Jk_h <- PGH_m - (1.4 * PGD_m)      # Jacket of height
+Jk_V <- 0.25 * pi *(Jk_d^2 - Ou_TD^2) * Jk_h
 
+JktQ_m3s  <- JktQ_m3hr/3600
+Jk_u <-  JktQ_m3s/Jk_V
+Jk_hd <- Jk_d - Ou_TD
+
+W_Pr <- W_Cp * W_DViscosity / W_k           # Water Prandtl Number
+Re_jkt <- (W_Density * Jk_u * Jk_hd)/ W_DViscosity
+W_Nu <- 0.87 * Re_jkt^(0.8) * W_Pr^(0.33)  # Water Nusselt
 H_h <- (W_Nu * W_k) / Jk_d
-U_h <- ((1 / (H_h)) + (Jk_thk / 15))^-1 # U from Jacket
+Thermal_Res <- 100E-3/64.4 + 2000E-3/1600 #+Jk_thk / 15
+U_h <- ((1 / (H_h)) + (Thermal_Res))^-1 # U from Jacket
 A_h <- pi * Jk_d * Jk_h    # Area from Jacket
 Ch_len <- Jk_thk
 Biot <- (U_h * Ch_len) / W_k
 
 # Convectional heat loss
-h_s <- 1.41 * (13 / Jk_h)^0.25 # McAdams formula
+h_s <- 1.41 * ((T_h-T_s) / Jk_h)^0.25 # McAdams formula
 U_scv <- (1 / h_s)^-1
 U_srd <- (1 / (2 * h_s))^-1
-mcp <- W_m * W_Cp
+mcp <- JktM_khgr * W_Cp
 b_no <- (U_h * A_h) / mcp         # UA/mCp
 
 a_cv <- (U_h * A_h * T_h) + (U_scv * Ou_s * T_s)
@@ -75,9 +90,15 @@ CoolingJkT_plot <-
   geom_line(aes(y = T_base, color = "No heat loss")) +
   geom_line(aes(y = T_conv, color = "Only Convectional loss"), linetype = "dashed") +
   geom_line(aes(y = T_rad, color = "Convection and Radiation"), linetype = "dashed") +
-  labs(x = "Time(s)", y = "Temperature(K)", title = "Stirred tank model comparison") +
+  labs(x = "Time(s)", y = "Temperature(K)", title = "Temperature of Reactor with a Cooling Jacket",
+       color = "Heat Loss") +
   PGDP_theme() +
-  theme(legend.position = "bottom") +
+  theme(axis.title.x = element_text(size = 11),
+        axis.title.y = element_text(size = 11),
+        legend.position = "top",
+        legend.title = element_text(size = 9),
+        legend.text  = element_text(size = 8),
+        plot.title = element_text(size =12)) +
   scale_color_manual(values = c("No heat loss" = "red", "Only Convectional loss" = "green", 
                                 "Convection and Radiation" = "blue"))
 print(CoolingJkT_plot)

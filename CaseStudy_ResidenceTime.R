@@ -1,10 +1,20 @@
+# =============================================================================
+# CaseStudy_ResidenceTime.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: Case Study investigating effect of volume and pressure
+#   on residence time of products in the gasifier
+#
+# =============================================================================
 Vol_list   <- seq(0,200,  by = 25)
 Press_list <- seq(1E+5,5E+6, by = 1E+6)
 
 Case_RT <- data.frame()
 
 for (nV in 1:length(Vol_list)){
-  for (nP in 1:length(Press_list)){
+  for (nP in 1:length(Press_list)){i
     Voln <- Vol_list[nV]
     Pressn <- Press_list[nP]
     
@@ -38,5 +48,5 @@ CSRT_plot <-
   coord_cartesian(clip = "off")
 
 print(CSRT_plot)
-# ggsave(file.path( pic_folder, "CSRT.png"), CSRT_plot, width = 170, height = 120, units = "mm")
+ggsave(file.path( pic_folder, "CSRT.png"), CSRT_plot, width = 170, height = 120, units = "mm")
 

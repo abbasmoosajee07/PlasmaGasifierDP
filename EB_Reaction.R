@@ -1,3 +1,13 @@
+# =============================================================================
+# EB_Reaction.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: Energy Balance of the reaction system
+#
+# =============================================================================
+
 source("EB_Polymer.R")
 # Plasma Gasifier Energy Requirements -------------------------------------
 

@@ -8,20 +8,7 @@
 #
 # =============================================================================
 
-
-ceramic_props <- data.frame(
-  Material = c("TaB2", "TiB2", "ZrB2", "TiC", "ZrC", "TaC", "TaN", "TiN", "ZrN"),
-  Crystal_structure = c("HCP", "HCP", "HCP", "FCC", "FCC", "FCC", "FCC", "FCC", "FCC"),
-  Melting_temperature = c(3040, 3225, 3245, 3100, 3530, 3800, 2900, 2950, 2950),
-  Density = c(12.5, 4.5, 6.1, 4.9, 6.6, 14.5, 13.4, 5.4, 7.3),
-  CTE = c(8.5, 8.1, 6.9, 7.6, 6.82, 7.5, 3.2, 9.35, 7.24),
-  Thermal_Cond = c(13, 64.4, 57.9, 19, 20.61, 22.2, 8.3, 29.1, 20.9),
-  Electrical_Resist = c(33, 22.2, 9.2, 52.5, 68, 36, 131, 21.7, 13.6),
-  Elastic_Modulus = c(551, 575, 489, 437, 387, 537, 490, 400, 384),
-  Hardness = c(19.6, 24, 23, 30, 25, 17, 10.8, 18.6, 15)
-)
-
-Vr <- 50 # Volume of Reactor
+Vr <- Vr # Volume of Reactor
 PolyE_Jhr <- PolyE_Jhr # Energy required for plasmolysis of plastic
 FCR_kghr <- Plastic_kghr
 GratD_m   <- 2.5
@@ -72,7 +59,7 @@ Nozzle_Prop <- data.frame(
   NozSpace_m = NozSpace,
   InletV_ms = IGV_ms
 )
-print(t(Nozzle_Prop))
+
 # Height, Diameter Calculations -----------------------------------------------
 # Generate a range of diameters
 diameters <- seq(1, 7, by = 0.1)
@@ -92,15 +79,22 @@ VolDH_Plot <- ggplot() +
   PGDP_theme()
 print(VolDH_Plot)
 
-# ggsave(file.path(pic_folder, "VolDH.png"), VolDH_Plot, width = 120, height = 80, units = "mm")
+ggsave(file.path(pic_folder, "VolDH.png"), VolDH_Plot, width = 120, height = 80, units = "mm")
+
 
 # Wall Thickness ----------------------------------------------------------
-
+PGH_m <- 1.25 * PGH_m
 Di <- PGD_m
 Pi <- SynG_PI
-S  <- 575E+9
-Wall_thick <- (Pi*Di)/(2*S-1.2*Pi)   # Wall thickness in m
+S  <- 25.3E+6
+WThkmin_m <- (Pi*Di)/(2*S-1*Pi)   # Wall thickness in m
+Wall_thick <- round(WThkmin_m + 2E-3,3)
+EHThk_m <- (Pi*Di)/(2*S-0.2*Pi)
 
+long_stress <- (Pi*Di)/(4*Wall_thick)
+circ_stress <- (Pi*Di)/(2*Wall_thick)
+P_w <- 0.05 * (160)^2
+W <- P_w * (PGD_m + 0.4)
 # Output Gasifier Properties ----------------------------------------------
 
 Gasifier_Prop <- data.frame(
@@ -117,8 +111,7 @@ Gasifier_Prop <- data.frame(
   Height_m = PGH_m
 )
 
+print(t(Nozzle_Prop))
 print(t(Gasifier_Prop))
-# view_table(t(Gasifier_Prop),4)
-# view_table(t(Nozzle_Prop),4)
-# view_table(t(Gasifier_Prop),4,"latex")
+
 

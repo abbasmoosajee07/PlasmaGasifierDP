@@ -18,6 +18,8 @@ HEX_Stream <- function(St_prop,Flow_Composition, HEX_eff = 0.9) {
   
   Pne <- PG_Press
   Flow_Composition <- Composition_props(Flow_Composition,Pne,HTf,HTi)
+  Hot_dH <- -sum(Flow_Composition[,"dH_Jhr"])
+  Cold_dH <- Hot_dH / HEX_eff
   
   if (CTf >= element_props[element_props$Component == "Water","Tb_K"]){
     dHv <- Gen_fluid[Gen_fluid$Fluid == "Water","dH_Jmol"]
@@ -26,8 +28,6 @@ HEX_Stream <- function(St_prop,Flow_Composition, HEX_eff = 0.9) {
   } else {
     result_water   <- state_func(main_elements$Water,CTi,CTf)
   }
-  Hot_dH <- -sum(Flow_Composition[,"dH_Jhr"])
-  Cold_dH <- Hot_dH / HEX_eff
   water_molflow <- Cold_dH / result_water$Enthalpy
   water_massflow <- water_molflow * element_props[element_props$Component == "Water","Molar_Mass"]
   water_volflow <- water_massflow / Gen_fluid[Gen_fluid$Fluid == "Water","rho_kgm3"]
@@ -116,19 +116,20 @@ STHEX_func <- function(St_prop, Tube_No = 338, Tube_OD = 50E-3, thk =5E-3, Shell
 
 
 # Pump Functions ---------------------------------------------------------------
-Pump_func <- function(PFluid_props) { 
+# Pump Functions ---------------------------------------------------------------
+Pump_func <- function(PFluid_props,PumpNo,PumpModel) { 
   # Water Storage Properties
   SuctionP_Pa <- P_atm   # Average Pressure in Water Storage Tanks
-  PipeD_m <- 80E-03      # Internal Diameter of Pipeline
-  PipeL_m <- 50          # Pipe Length 
-  fD <- 0.0027           # Darcy Friction Coefficient
-  pump_eff <- 0.8        # Estimated Pump Efficiency
+  PipeD_m <- 15E-3      # Internal Diameter of Pipeline
+  PipeL_m <- 20          # Pipe Length 
+  fD <- 0.046E-3           # Darcy Friction Coefficient
+  pump_eff <- 0.7        # Estimated Pump Efficiency
   Hst <- 2.5             # Difference in Elevation
-  hm <- 2.5              # Minor Head Losses from fittings, expansion
+  hm <- 0.5              # Minor Head Losses from fittings, expansion
   
   # Fluid Properties------------------------------------------------------------
   dHvp <- Gen_fluid[Gen_fluid$Fluid == "Water","dH_Jmol"] /
-               Gen_fluid[Gen_fluid$Fluid == "Water","RMM"]
+    Gen_fluid[Gen_fluid$Fluid == "Water","RMM"]
   CpW <- Gen_fluid[Gen_fluid$Fluid == "Water","Cp"]
   rho_f <- Gen_fluid[Gen_fluid$Fluid == "Water","rho_kgm3"]
   InT_K <- 288           # Ref Temp for Vap Pressure
@@ -150,7 +151,7 @@ Pump_func <- function(PFluid_props) {
   # Pump Power Calculations
   pump_power_req<- (Water_flow*dP_Pa)/3.6E+06  # in kWh
   pump_power_out<- pump_power_req/pump_eff
-
+  
   # NPSH available Calculations
   dT <- pump_power_req*(1-pump_eff)/(CpW*Water_flow*rho_f)       # Increase in Temp
   P_vap <-  log((dHvp/R)*(1/InT_K/(InT_K+dT)))*Pvap_Pa # Vapour Pressure of Water
@@ -165,121 +166,236 @@ Pump_func <- function(PFluid_props) {
              "Pa", "Pa", "Pa", "£"),
     Values = c(PFluid, Water_flow, pump_power_out, NPSH_av,
                SuctionP_Pa,DischargeP_Pa,dP_Pa, Cost)
-
+    
   )
-
+  
   # Pump Plot ------------------------------------------------------------------
   # System Curve
-  Flow_list <- seq(0.0, Water_flow*3, by = 0.10)/3600
+  Flow_list <- seq(0.0,40, by = 0.10)/3600
   hf_list <- (8 * fD * PipeL_m * (Flow_list)^2)/(pi^2 * gravity * PipeD_m^5)
   TotalH_list <- Hst + hf_list +hm
   
-  # Pump Curve
-  RPM <- 1
-  ImpD_m <- 1
-  CQ <- Flow_list/(RPM * ImpD_m^3)
-  CH <- 8 - (2 * CQ) - (210 * CQ^2)#20 + 300*Flow_list^2#
-  PH_list <- (CH*RPM^2 * ImpD_m^2) / gravity
+  
   pump_curve_data <- data.frame(FlowRate = Flow_list*3600, 
-                                Sys_Head = TotalH_list, 
-                                Pump_Head = PH_list)
+                                Sys_Head = TotalH_list)
   
   # Plot the pump curve 
   Pump_Plot <-
     ggplot() +
     geom_line(data = pump_curve_data, mapping = aes(x = FlowRate, y = Sys_Head), color ="blue") +
-    geom_line(data = pump_curve_data, mapping = aes(x = FlowRate, y = Sys_Head), color = "red") +
-    labs(title = "Pump Performance Curve",
+    geom_line(data = PumpModel, mapping = aes(x = Q_m3hr, y = Head_m, color = as.character(RPM))) +
+    geom_dl(data = PumpModel, mapping = aes(x = Q_m3hr, y = Head_m, label = as.character(RPM), color = as.character(RPM)), 
+            method = list(dl.combine("top.points")), angle = 0, vjust = 0, na.rm = TRUE, size = 0.1) +
+    labs(title = paste0("Pump00",PumpNo," Performance Curve"),
          x = "Flow Rate (m^3/h)",
-         y = "Head (m)") +
-    PGDP_theme()
+         y = "Head (m)",
+         color = "RPM of Pump") +
+    PGDP_theme() + 
+    theme(axis.title.x = element_text(size = 10),
+          axis.title.y = element_text(size = 10),
+          legend.position = "none",
+          plot.title =  element_text(size = 11)) +
+    coord_cartesian(clip = "off")
   print(Pump_Plot)
+  
+  PlotSave <- paste0("Pump00",PumpNo,"_Plot.png")
+  ggsave(file.path(pic_folder, PlotSave), Pump_Plot, width = 120, height = 90, units = "mm")
+  
   return(Pump_props)
 }
-
-
+# Cyclone Calculations -------------------------------------------------------
+Cyc_func <- function(Composition,Press,Temp){
+  Cyclone_Input <- Composition_props(Composition,Press,Temp)
+  
+  # Cyclone Dimensions 
+  Cyc_dim <- {data.frame(
+    Body_D = 1.00,
+    In_H = 0.50,
+    In_W = 0.20,
+    Out_L = 0.50,
+    Out_D = 0.50,
+    Cyl_H = 1.50,
+    Ov_H = 4.00,
+    Dust_out = 0.38,
+    NH = 6.40,
+    k = 551.30
+  )}
+  rownames(Cyc_dim) <- "Ratio"
+  Cyc_dim["Length_m",] <- Cyc_dim["Ratio",] * 0.72
+  
+  # Cyclone Calculations
+  SngFl_m3hr <- sum(Cyclone_Input$Vol_m3hr)
+  SngFl_m3s <- SngFl_m3hr/3600
+  Sngrho_kgm3 <- sum(Cyclone_Input$Mass_KGhr)/SngFl_m3hr
+  InA_m2 <- Cyc_dim["Length_m","In_H"] * Cyc_dim["Length_m","In_W"]
+  Inv_ms <- SngFl_m3s/InA_m2
+  AshD_m <- Solid_waste[Solid_waste$Solid == "Ash", "Size"]
+  Ashrho_kgm3 <- Solid_waste[Solid_waste$Solid == "Ash", "rho_kgm3"]
+  dP_Pa <- (Cyc_dim["Length_m","NH"] * Sngrho_kgm3 * Inv_ms^2)/2
+  Cost_pnd <- ((57800 * InA_m2^0.903)*798.7/100)*2
+  Cyc_eff <- 1.0
+  
+  Cyclone_Input <- Cyclone_Input["Mass_KGhr"] 
+  Ash_removed <- Cyclone_Input["Ash",]* Cyc_eff
+  Carbon_removed <- Cyclone_Input["Carbon",] * Cyc_eff
+  Cyclone_Output <- Cyclone_Input
+  Cyclone_Output["Ash",] <- Cyclone_Output["Ash",] - Ash_removed
+  Cyclone_Output["Carbon",] <- Cyclone_Output["Carbon",] - Carbon_removed
+  Ash <- Output_composition[Output_composition$Component == "Ash","Mass_KGhr"] + 
+    Output_composition[Output_composition$Component == "Carbon","Mass_KGhr"]
+  Char_composition <- Cyclone_Input - Cyclone_Output
+  
+  # Output data 
+  Cyc_calcs <- data.frame(
+    Property = c("Syngas Flow", "Syngas Velocity",
+                 "Overall Height", "Body Diameter",
+                 "Char Density", "Char Size", "Char Removed",
+                 "Pressure Drop", "Equipment Cost"),
+    Unit = c("m^3/hr", "m/s",
+             "m", "m",
+             "kg/m^3", "m", "kg/hr",
+             "Pa", "£"),
+    Value = c(SngFl_m3hr, Inv_ms,
+              as.numeric(Cyc_dim["Length_m","Ov_H"]), as.numeric(Cyc_dim["Length_m","Body_D"]),
+              Ashrho_kgm3, AshD_m, Ash,
+              dP_Pa, Cost_pnd)
+  )
+  return(Cyc_calcs)
+}
 # Quench Tower Calculations for ------------------------------------------------
-CoolingT_Stream <- function(St_prop,Solid, HEX_eff = 0.9) {
-  HTi <- St_prop[St_prop$Stream=="Hot","TempIn_K"]
-  HTf <- St_prop[St_prop$Stream=="Hot","TempOut_K"]
-  CTi <- St_prop[St_prop$Stream=="Cold","TempIn_K"]
-  CTf <- St_prop[St_prop$Stream=="Cold","TempOut_K"]
+Quench_Stream <- function(St_prop,Solid) {
+  HTi <- St_prop[St_prop$Stream=="Hot","Temp_K"]
+  CTi <- St_prop[St_prop$Stream=="Cold","Temp_K"]
+  
+  
+  # Solid property ----------------------------------------------------------
+  Cps <- Solid_waste[Solid_waste$Solid == Solid,"Cp"]
   
   Solid_props <- Solid_waste[Solid_waste$Solid == Solid,]
-  Solid_MFlow <- as.numeric(St_prop[St_prop$Stream == "Hot","Mf_kghr"])
-  Solid_VFlow <- Solid_MFlow / Solid_props[,"rho_kgm3"]
+  Solid_kghr <- as.numeric(St_prop[St_prop$Stream == "Hot","Mf_kghr"])
+  Solid_m3hr <- Solid_kghr / Solid_props[,"rho_kgm3"]
+  SmCp <- Solid_kghr * Cps
+  Hsi  <- SmCp * HTi
   
-  Hot_dH <- Solid_MFlow * Solid_props[,"Cp"] * abs(HTf - HTi)
-  result_water   <- state_func(main_elements$Water,CTi,CTf)
   
-  Cold_dH <- Hot_dH / HEX_eff
-  water_molflow <- Cold_dH / result_water$Enthalpy
-  water_massflow <- water_molflow * element_props[element_props$Component == "Water","Molar_Mass"]
-  water_volflow <- water_massflow / Gen_fluid[Gen_fluid$Fluid == "Water","rho_kgm3"]
+  # Water Stream Property ---------------------------------------------------
+  Cpf <- Gen_fluid[Gen_fluid$Fluid == "Water","Cp"]
   
-  St_prop[,"Mf_kghr"] <- c(Solid_MFlow,water_massflow)
-  St_prop[,"Vol_m3hr"] <- c(Solid_VFlow,water_volflow)
-  St_prop[,"dH_Jhr"] <- c(Hot_dH,Cold_dH)
-  St_prop[,"dP_Pa"] <- c(0,0)
+  Water_kghr <- as.numeric(St_prop[St_prop$Stream == "Cold","Mf_kghr"])
+  Water_m3hr <- Water_kghr / Gen_fluid[Gen_fluid$Fluid == "Water","rho_kgm3"]
+  WmCp <- Water_kghr * Cpf
+  HWi  <- WmCp * CTi
   
-  return(St_prop)
+  THi <- Hsi + HWi
+  
+  # Mixed Stream Property ---------------------------------------------------
+  THf <- THi
+  Mixed_kghr <- Solid_kghr + Water_kghr
+  Mixed_m3hr <- Solid_m3hr + Water_m3hr
+  
+  TmCp <- SmCp + WmCp
+  MT_K <-  THf / TmCp
+  
+  
+  St_prop[,"Mf_kghr"] <- c(Solid_kghr,Water_kghr,Mixed_kghr)
+  St_prop[,"Vol_m3hr"] <- c(Solid_m3hr,Water_m3hr,Mixed_m3hr)
+  St_prop[,"Temp_K"] <- c(HTi,CTi,MT_K)
+  St_prop[,"dH_Jhr"] <- c(Hsi,HWi,THf)
+  St_prop[,"mCp"] <- c(SmCp,WmCp,TmCp)
+  
+  TowerV_m3 <- 2
+  Tr_s <- Mixed_m3hr / TowerV_m3
+  
+  Tower_props <- data.frame(
+    Property = c("Solid Flow", "Water Flow", "Total Vol","Outlet Temp",
+                 "Tower Vol", "Residence Time"),
+    Unit = c("kghr","kghr","m3hr","K","m3","hr"),
+    Value = c(Solid_kghr,Water_kghr,Mixed_m3hr,MT_K,TowerV_m3,Tr_s)
+  )
+  
+  result_df <- list(
+    "Stream" = St_prop,
+    "Tower" = Tower_props
+  )
+  return(result_df)
 }
 
-
-
-
-
-# Compressor Functions ----------------------------------------------------
-fan_func <- function(Composition, Pi_Pa, dP_Pa, Ti, efficiency = 0.8) {
+# Fan Functions ----------------------------------------------------
+fan_func <- function(Composition, Pi_Pa, dP_Pa, Ti, efficiency = 0.7) {
   Pf_Pa <- Pi_Pa + dP_Pa
-  Pi_Comp <- Composition_props(Output_composition,Pi_Pa,Ti)
-  Pf_Comp <- Composition_props(Output_composition,Pf_Pa,Ti)
+  Pi_Comp <- Composition_props(Composition,Pi_Pa,Ti)
+  Pf_Comp <- Composition_props(Composition,Pf_Pa,Ti)
   
-  Vi_m3hr <- sum(Pi_Comp$Vol_m3hr)
-  Vf_m3hr <- sum(Pf_Comp$Vol_m3hr)
+  Vi_m3s <- sum(Pi_Comp$Vol_m3hr)/3600
+  Vf_m3s <- sum(Pf_Comp$Vol_m3hr)/3600
   
   Cp <- (sum(Pi_Comp$dH_Jhr)/1000)/sum(Pi_Comp$Mol_kmolhr)
   Cv <- Cp - R
   gamma <- Cp / Cv
-
-    # Calculate work done using the formula: W = (P2 * V2 - P1 * V1) / (gamma - 1)
-  work_done <- (Pf_Pa * Vf_m3hr - Pi_Pa * Vi_m3hr) / (gamma - 1)
+  n <- gamma
+  m <- (gamma - 1) /(gamma * efficiency)
   
-  # Calculate change in enthalpy
-  delta_h <- work_done
+  work_done <- R *  Ti * (n/(n-1)) * ((Pf_Pa/Pi_Pa)^((n-1)/n)-1)
+  T2 <- Ti*(Pf_Pa/Pi_Pa)^m
+  delta_T <- T2 - Ti
   
-  # Calculate change in temperature using ideal gas law: P1 * V1 / T1 = P2 * V2 / T2
-  delta_T <- ((Pf_Pa * Vf_m3hr) / (Pi_Pa * Vi_m3hr)) - 1
-  delta_T <- delta_T * (gamma - 1) * ((1 / Vi_m3hr) - (1 / Vf_m3hr))
-  
-  # Calculate compression ratio
   compression_ratio <- Pf_Pa / Pi_Pa
-  
-  # Calculate mass flow rate assuming steady flow
   massflow_kghr <- sum(Pi_Comp$Mass_KGhr)
   
-  # Calculate power required by the compressor
-  power_required <- work_done / efficiency
-  
-  # Calculate electricity usage
-  electricity_usage <- power_required * JhrtokWh# Convert from J/s to kWh
-  Cost <- (3800 + 49 * Vi_m3hr^0.8)*(798.7/509.7)
+  power_required <- (work_done*massflow_kghr) / 0.95
+  electricity_usage <- power_required * JhrtokWh
+  Cost <- (3800 + 49 * (Vi_m3s*3600)^0.8)*(798.7/509.7)
   
   fan_props <- data.frame(
     Property = c("Fluid_Flow", "Initial_Volume", "Initial_Pressure",
                  "Final_Volume", "Final_Pressure",
-                 "Pressure Drop", "Power Required", "Electricity Use" ,"Equipment Cost"),
-    Unit = c("kg/hr", "m^3/hr", "Pa", "m^3/hr", "Pa","Pa", "kWh", "kWh", "£"),
-    Values = c(massflow_kghr, Vi_m3hr, Pi_Pa, Vf_m3hr, Pf_Pa,
-               dP_Pa, power_required, electricity_usage, Cost)
+                 "Pressure Drop", "Comp Ratio","dT","Power Required", "Electricity Use" ,"Equipment Cost"),
+    Unit = c("kg/hr", "m^3/hr", "Pa", "m^3/hr", "Pa","Pa","","K", "W", "kWh", "£"),
+    Values = c(massflow_kghr, Vi_m3s, Pi_Pa, Vf_m3s, Pf_Pa,
+               dP_Pa, compression_ratio, delta_T,power_required, electricity_usage, Cost)
   )
   return(fan_props)
+}
+comp_func <- function(Composition, Vi_m3s, Pi_Pa, dP_Pa, Ti, efficiency = 0.7) {
+  Pf_Pa <- Pi_Pa + dP_Pa
+  Pi_Comp <- Composition_props(Composition,Pi_Pa,Ti)
+  Pf_Comp <- Composition_props(Composition,Pf_Pa,Ti)
+  
+  Vf_m3s <- sum(Pf_Comp$Vol_m3hr)
+  
+  Cp <- (sum(Pi_Comp$dH_Jhr)/1000)/sum(Pi_Comp$Mol_kmolhr)
+  Cv <- Cp - R
+  gamma <- Cp / Cv
+  n <- gamma
+  m <- (gamma - 1) /(gamma * efficiency)
+  
+  work_done <- R *  Ti * (n/(n-1)) * ((Pf_Pa/Pi_Pa)^((n-1)/n)-1)
+  T2 <- Ti*(Pf_Pa/Pi_Pa)^m
+  delta_T <- T2 - Ti
+  
+  compression_ratio <- Pf_Pa / Pi_Pa
+  massflow_kghr <- sum(Pi_Comp$Mass_KGhr)
+  
+  power_required <- (work_done*massflow_kghr) / 0.95
+  electricity_usage <- power_required * JhrtokWh
+  Cost <- (490000 + 16800 * electricity_usage^0.6)*(798.7/509.7)
+  
+  comp_props <- data.frame(
+    Property = c("Fluid_Flow", "Initial_Volume", "Initial_Pressure",
+                 "Final_Volume", "Final_Pressure",
+                 "Pressure Drop", "Comp Ratio","dT","Power Required", "Electricity Use" ,"Equipment Cost"),
+    Unit = c("kg/hr", "m^3/hr", "Pa", "m^3/hr", "Pa","Pa","","K", "J/s", "kWh", "£"),
+    Values = c(massflow_kghr, Vi_m3s, Pi_Pa, Vf_m3s, Pf_Pa,
+               dP_Pa, compression_ratio, delta_T, power_required, electricity_usage, Cost)
+  )
+  return(comp_props)
 }
 
 # Steam Turbine -----------------------------------------------------------
 
 Steam_turbine <- function(steam_mass){
-  turbine <- 12500 / 54000
+  turbine <- 6100 / 25000
   elec_kWh <- turbine * steam_mass
   return(elec_kWh)
 }
+

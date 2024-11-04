@@ -12,27 +12,27 @@
 # options(scipen = 0)    # Turn scientific numbering on
 # options(scipen = 999)  # Turn scientific numbering off
 
+# Endothermic Reaction, +dH, absorbs heat
+# Exothermic Reaction,  -dH, releases heat
 
-hrtos <- 3600
-Elec_Cost <- 0.270 
-Ex_Cap <- 1.1 # Excess Capacity
+# Production Capacity ---------------------------------------------------------
+Opr_days <- 330           # Annual Operation
+Daily_hrs <- 24           # 24/7 Daily Operation
+Ex_Cap <- 1.1             # Excess capacity (taken to be a multiplier)
+Basis_hrs <- Opr_days * Daily_hrs
 
-Reac_temp <- 2750
-Gas_out_temp  <- Reac_temp
+# Reactor Settings
+Reac_temp <- 2750         # Reactor temperature in Kelvin
+Gas_out_temp <- Reac_temp # Gas outlet temperature, same as reactor temperature
 
-PG_Press <- 4E+6 
-SynG_PI  <- PG_Press
-  
-WaterStorageTemp <- 288
-MaxWaterTemp <- 698
-SlagTemp  <- Reac_temp
+# Volume and Pressure
+Vr <- 50                  # Volume of the reactor in cubic meters
+PG_Press <- 4E+6          # Pressure of the gas (assumed to be in Pascals)
+SynG_PI <- PG_Press       # Synthesis gas pressure, same as the gas pressure
 
-Room_temp <- 288
+# Storage and Environmental Conditions
+WaterStorageTemp <- 288   # Temperature of water storage in Kelvin
+Room_temp <- 288          # Room temperature in Kelvin
 
 
-FandP_Pa  <- 10E+5
-
-HEX1_Out  <- Gas_out_temp-1014
-
-HEX2_Out  <- HEX1_Out - 1014
 

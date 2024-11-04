@@ -66,7 +66,6 @@ k_values <- k_values[k_list]
 parameters <- k_values 
 
 times <- seq(0, 1.4E-6, by = 1E-9) # Time points
-Vr = 15
 
 # Solve the ODE  ---------------------------------------------------------------
 
@@ -164,5 +163,5 @@ MB_plot <- ggplot() +
   guides(fill = guide_legend(nrow = 1))
 
 print(MB_plot)
-# ggsave(file.path(pic_folder, "MBPlot.png"), MB_plot, width = 170, height = 70, units = "mm")
+ggsave(file.path(pic_folder, "MBPlot.png"), MB_plot, width = 170, height = 70, units = "mm")
 

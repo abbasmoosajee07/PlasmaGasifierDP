@@ -9,7 +9,6 @@
 #
 # =============================================================================
 
-
 # Process Constants -----------------------------------------------------------
 P_atm <- 101325
 Ref_T <- 298
@@ -21,6 +20,7 @@ JhrtokWh <- 1 / (3600 * 1000)
 timeconv <- 3600
 
 # Visual Functions -----------------------------------------------------------
+pounds_format <- dollar_format(prefix = "£", big.mark = ",")
 
 PGDP_theme <- function(){
   theme_minimal() +
@@ -56,6 +56,16 @@ view_table <- function(table, round = 2, type = "html") {
 }
 
 # General Functions -------------------------------------------------------
+
+total_func <- function(df){
+  nr <- nrow(df)
+  df[nr+1,] <- 0
+  df[nr+1,1] <- "Total"
+  for (nc in 2:ncol(df)){
+    df[nr+1,nc] <- sum(as.numeric(df[,nc]))
+  }
+  return(df)
+}
 
 Cp_int <- function(T, TP_data) {
   if (T == 0) {

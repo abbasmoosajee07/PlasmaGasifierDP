@@ -1,3 +1,13 @@
+# =============================================================================
+# Element_Data.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: Defining thermo-physical properties of constituent elements in 
+#   the system
+#
+# =============================================================================
 
 main_elements <- {list(
     Oxygen = data.frame(

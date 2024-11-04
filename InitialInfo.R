@@ -1,3 +1,14 @@
+# =============================================================================
+# InitialInfo.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: Defines all the Initial Info of system properties as received 
+#   from the Wash and Dryer Node
+#
+# =============================================================================
+
 Dryer_out_temp <- 330 # Temp in K
 Dryer_out_press <- 1 # pressure in bar
 
@@ -6,8 +17,8 @@ gasifier_feed <- data.frame(
   HDPE = 620.87,
   PP = 457.48,
   PS = 294.10,
-  PVC = 196.06 * 0.1,
-  PET = 326.77,
+  PVC = 196.06 * 0.02,
+  PET = 326.77 * 0.99,
   Others = 601.02,
   Microplastics = 0, 
   Paper_and_card = 0,

@@ -1,3 +1,13 @@
+# =============================================================================
+# CaseStudy_Oxygen.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: A Case Study to investigate the effect of oxygen feed and purity
+# on all component products at steady state
+#
+# =============================================================================
 
 # Conversion Function ----------------------------------------------------------
 conv_func <- function(Input_composition,O2_feed,O2_purity,Vr,SynG_PI,Water){
@@ -83,7 +93,7 @@ conv_func <- function(Input_composition,O2_feed,O2_purity,Vr,SynG_PI,Water){
     return(OutComp_n)
 }
 
-Vr <- 15
+Vr <- 50
 ReacPress_Out <- SynG_PI
 
 O2_plist = seq(0.2,  1.0, by = 0.1)
@@ -128,6 +138,6 @@ CSO2_plot <-
   facet_wrap(~ Element, ncol = 2, scales = "free_y") +
   coord_cartesian(clip = "off")
 print(CSO2_plot)
-# ggsave(file.path( pic_folder, "CSO2.png"), CSO2_plot, width = 200, height = 160, units = "mm")
+ggsave(file.path( pic_folder, "CSO2.png"), CSO2_plot, width = 200, height = 160, units = "mm")
 warning()
 

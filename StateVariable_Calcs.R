@@ -1,3 +1,14 @@
+# =============================================================================
+# StateVariable_Calcs.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: A function that uses a series of if-fucntions to evaluate which 
+#   shomate equation should be used to calculate the enthalpy, entropy and Cp
+#
+# =============================================================================
+
 state_func <- function(TP_data,Start_Temp,Final_Temp){
   nrow = nrow(TP_data)
 

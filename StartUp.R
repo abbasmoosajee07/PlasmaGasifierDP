@@ -1,3 +1,14 @@
+# =============================================================================
+# StartUp.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: Loads all required libraries, and runs all the necessary files 
+# required for the project
+#
+# =============================================================================
+
 rm(list=ls()) # Clear the memory
 
 # Install and Load required packages -------------------------------------------
@@ -62,7 +73,10 @@ script_files <- c("Functions-DPAK2.R", "PlasmaGasifier.R",
                   "StateVariable_Calcs.R","Unit_Funcs.R",
                   "InitialInfo.R", "EB_Polymer.R",
                   "Reactions.R", "EquilibriumK_eqs.R",
-                  "conv_calc.R", "PostPG_Calc.R")
+                  "conv_calc.R", "ModelPumps_Data.R", 
+                  "PostPG_Calc.R","PG_Sizing.R",
+                  "CoolingJacket.R","Pipe_Props.R",
+                  "Finance.R","Economic_Analysis.R","Fin_Scen.R")
 
 run_scripts <- function(script_files){
   # Run each R script

@@ -1,4 +1,12 @@
-# Polymer Properties ------------------------------------------------------
+# =============================================================================
+# PolymerData.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: Defining thermo-physical properties of plastic polymers 
+#
+# =============================================================================
 
 polymer_data <- data.frame(
   Polymer = c("LDPE", "HDPE", "PP", "PS", "PVC", "PET", "Others"),

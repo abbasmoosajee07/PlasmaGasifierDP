@@ -1,4 +1,13 @@
-# Data
+# =============================================================================
+# Reactions.R
+# Author: Abbas Moosajee
+# Date: 07/03/2024
+# Project: Plasma Gasifier DP
+#
+# Description: Defines the 14 main reactions taking place in the process system
+#
+# =============================================================================
+
 prod_def <- -1
 reaction_data <- data.frame(
   RNo = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14),
